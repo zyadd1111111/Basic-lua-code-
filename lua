@@ -1,17 +1,33 @@
-local HttpService = game:GetService("HttpService")
+print("Made by Subsonyt")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
-local url = "https://raw.githubusercontent.com/yourusername/yourrepo/main/lockon.lua"
-local success, scriptCode = pcall(function()
-    return game:HttpGet(url)
-end)
+local localPlayer = Players.LocalPlayer
+local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
 
-if success and scriptCode then
-    local func = loadstring(scriptCode)
-    if func then
-        func()
-    else
-        warn("Failed to load script.")
+local function getNearestHead()
+    local nearestHead = nil
+    local nearestDistance = math.huge
+    local hrpPos = hrp.Position
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("Head") then
+            local head = player.Character.Head
+            local dist = (head.Position - hrpPos).Magnitude
+            if dist < nearestDistance then
+                nearestDistance = dist
+                nearestHead = head
+            end
+        end
     end
-else
-    warn("Failed to fetch script from URL.")
+
+    return nearestHead
 end
+
+RunService.RenderStepped:Connect(function()
+    local nearestHead = getNearestHead()
+    if nearestHead and hrp then
+        hrp.CFrame = CFrame.new(hrp.Position, Vector3.new(nearestHead.Position.X, hrp.Position.Y, nearestHead.Position.Z))
+    end
+end)
